@@ -1,0 +1,43 @@
+# Gerenciamento dos logs do rws
+# Deve ser configurado no Docker Host
+
+/nr/rws/logs/app.log {
+    weekly
+    nocompress
+    notifempty
+    nodateext
+    missingok
+    copytruncate
+    su root root
+    create 0666 root root
+    rotate 5
+    size 128M
+}
+
+
+/nr/rws/logs/gunicorn.log {
+    weekly
+    nocompress
+    notifempty
+    nodateext
+    missingok
+    copytruncate
+    su root root
+    create 0666 root root
+    rotate 5
+    size 128M
+}
+
+
+/nr/rws/logs/gunicorn-access.log {
+    weekly
+    nocompress
+    notifempty
+    nodateext
+    missingok
+    copytruncate
+    su root root
+    create 0666 root root
+    rotate 5
+    size 128M
+}
