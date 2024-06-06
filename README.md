@@ -29,6 +29,8 @@ sudo /home/renault/rws/scripts/host/create_dirs.pl
 # Criacao da imagem
 docker build -t rws:latest .
 
+# Ajusta o start_app.csh para executar o loop...
+
 # Sobe o container
 make run_dev
 

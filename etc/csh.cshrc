@@ -15,18 +15,12 @@ umask 002
 setenv APP_NAME 'rws'
 setenv APP_ROOT_DIR '/home/renault/rws'
 setenv APP_DIR "${APP_ROOT_DIR}/app_home/rws"
-setenv APP_DESCRIPTION 'renault Web Services'
+setenv APP_DESCRIPTION 'Renault Web Services'
 
 setenv PATH "${PATH}:${APP_DIR}/"
 setenv LOGS_DIR '/nr/logs'
 setenv AUTO_RELOAD_ON_CHANGE 'True'
 setenv TMP /tmp
-
-# Output
-setenv OUTPUT_SERVER /mnt/out_server
-setenv OUTPUT_STORAGE /mnt/output_storage
-setenv GEN_REPOS /mnt/gen_repos
-setenv QUOTE_REPOS /mnt/quote_repos
 
 # Python
 setenv PYTHONPATH $APP_DIR

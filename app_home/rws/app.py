@@ -6,7 +6,8 @@ from libs.tools import handle
 
 # import de rotas
 
-from routes.app import app_routes
+
+from routes.app import teste_routes
 
 def create_app():
     app = Flask(environ["APP_NAME"])
@@ -23,6 +24,6 @@ def create_app():
     app.handle = handle
 
     # registro de rotas
-    app.register_blueprint(app_routes)
+    app.register_blueprint(teste_routes)
 
     return app

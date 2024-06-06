@@ -44,25 +44,8 @@ function main () {
     memory_swappiness=0
     case "$container_type" in
         dev)
-            "${app_root_dir}/scripts/host/create_dev_volumes.sh"
-            gen_repos='dev_gen_repos'
-            output_storage='dev_output_storage'
             shared_memory_size='1g'
             env_file="${app_root_dir}/etc/env.list.dev"
-            ;;
-        test)
-            "${app_root_dir}/scripts/host/create_dev_volumes.sh"
-            gen_repos='dev_gen_repos'
-            output_storage='dev_output_storage'
-            shared_memory_size='1g'
-            env_file="${app_root_dir}/etc/env.list.test"
-            ;;
-        pd)
-            "${app_root_dir}/scripts/host/create_pd_volumes.sh"
-            gen_repos='pd_gen_repos'
-            output_storage='pd_output_storage'
-            shared_memory_size='2g'
-            env_file="${app_root_dir}/etc/env.list.pd"
             ;;
         *)
             echo "ERRO: Opcao desconhecida: $container_type"
@@ -89,8 +72,6 @@ function main () {
         --volume="${app_root_dir}/etc/csh.cshrc":'/etc/csh.cshrc' \
         --volume="${app_root_dir}":"${app_root_dir}" \
         --volume="${nr}":'/nr' \
-        --volume="$gen_repos":'/mnt/gen_repos' \
-        --volume="/output3/$output_storage":'/mnt/output_storage' \
         --env='DISPLAY' \
         --net='host' \
         --hostname="$host_name" \

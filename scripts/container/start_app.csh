@@ -34,7 +34,7 @@ exec gunicorn wsgi:application \
     --timeout=600
 
 
-exec sh -c "while true; do sleep 1; done"
+# exec sh -c "while true; do sleep 1; done"
 
 
 # EOF

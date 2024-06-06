@@ -1,13 +1,13 @@
 from libs.database import mysql
 from libs.tools import handle
 
-def get_documents(**kwargs):
+def get_teste(**kwargs):
     """
     Retorne uma lista de documentos, de acordo com parametros
 
     Parametros
     ----------
-    document_type : string
+    teste : string
         O tipo do documento (checklist, view...)
     
     Retornos
@@ -15,14 +15,14 @@ def get_documents(**kwargs):
     array de dicionarios
     """
 
-    document_type = kwargs.get("document_type")
+    teste = kwargs.get("teste")
 
     try:
-        sql = ("CALL outputs_sp.get_documents(%s)")
-        sql_parameters = (document_type)
+        sql = ("SELECT %s")
+        sql_parameters = (teste)
         response = mysql.get(sql, sql_parameters)
         response = response["data"]
     except Exception as error:
-        handle.error(f"Falhou ao listar os documentos: {error}")
+        handle.error(f"Falhou ao buscar a palavra: {error}")
 
     return response
