@@ -53,7 +53,7 @@ commit:
 	git add .
 	git commit -a
 	git push local $(branch)
-	-git push bitbucket $(branch)
+	git push github $(branch)
 	git status
 
 # EOF
