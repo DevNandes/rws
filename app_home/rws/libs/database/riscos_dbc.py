@@ -1,25 +1,6 @@
 from libs.database import mysql
 from libs.tools import handle
 
-def busca_dashboards_status():
-    """
-    Busca dados que que gera os 4 dashboards superiores sobre os status
-    """
-
-    try:
-        sql = ("""SELECT 
-    (SELECT COUNT(idRisk) FROM RenaultRisk.RiskMonitoring) AS totalRiscos,
-    (SELECT COUNT(idRisk) FROM RenaultRisk.RiskMonitoring WHERE idStatus = 3) AS riscosResolvidos,
-    (SELECT COUNT(idRisk) FROM RenaultRisk.RiskMonitoring WHERE idStatus = 2) AS riscosTrajetoria,
-    (SELECT COUNT(idRisk) FROM RenaultRisk.RiskMonitoring WHERE idStatus = 4) AS riscosProblema;""")
-        sql_parameters = ()
-        response = mysql.get(sql, sql_parameters)
-        return response["data"]
-    except Exception as error:
-        handle.error(f"Falhou ao buscar os dashboards: {error}")
-        raise
-
-
 def busca_opcoes():
     """
     Busca todas as opções necessárias para o cadastro de riscos
@@ -142,7 +123,7 @@ def busca_risk_monitoring():
         risk,
         CadTipoRisco.nomeTipoRisco,
         CadArea.nomeArea,
-        riskEntryDate,
+        DATE_FORMAT(riskEntryDate, '%Y-%m-%d') AS riskEntryDate,
         consequences,
         project,
         CadMetier.nomeMetier,
@@ -153,12 +134,12 @@ def busca_risk_monitoring():
         action,
         pilotName,
         pilotId,
-        initialDate,
-        alertDate,
+        DATE_FORMAT(initialDate, '%Y-%m-%d') AS initialDate,
+        DATE_FORMAT(alertDate, '%Y-%m-%d') AS alertDate,
         CadResidualProb.nomeResidualProb,
         CadResidualImp.nomeResidualImp,
         CadAction.nomeAction,
-        resolutionDate,
+        DATE_FORMAT(resolutionDate, '%Y-%m-%d') AS resolutionDate,
         CadRiskValidation.nomeRiskValidation,
         idCapitalization
     FROM RenaultRisk.RiskMonitoring
@@ -189,4 +170,144 @@ def busca_risk_monitoring():
         return response["data"]
     except Exception as error:
         handle.error(f"Falhou ao buscar os riscos: {error}")
+        raise
+
+from libs.database import mysql
+from libs.tools import handle
+
+def busca_dados_dashboard():
+    """
+    Busca dados para todos os dashboards necessários
+    """
+    try:
+        queries = {
+            "situacoes_riscos": """
+                SELECT 
+                    (SELECT COUNT(idRisk) FROM RenaultRisk.RiskMonitoring) AS totalRiscos,
+                    (SELECT COUNT(idRisk) FROM RenaultRisk.RiskMonitoring WHERE idRiskValidation = 3) AS riscosResolvidos,
+                    (SELECT COUNT(idRisk) FROM RenaultRisk.RiskMonitoring WHERE idRiskValidation = 2) AS riscosTrajetoria,
+                    (SELECT COUNT(idRisk) FROM RenaultRisk.RiskMonitoring WHERE idRiskValidation = 4) AS riscosProblema,
+                    (SELECT COUNT(idRisk) FROM RenaultRisk.RiskMonitoring WHERE idRiskValidation = 1) AS riscosEmRisco;
+            """,
+            "riscos_por_projeto": """
+                SELECT project, COUNT(*) AS risk_count
+                FROM RenaultRisk.RiskMonitoring
+                GROUP BY project;
+            """,
+            "jalon_por_classificacao": """
+                SELECT 
+                    rm.idJalon,
+                    COUNT(CASE WHEN (rm.idProbabilit = 5 AND rm.idImpact IN (4, 5)) 
+                                OR (rm.idProbabilit = 4 AND rm.idImpact = 5) 
+                                OR (rm.idProbabilit = 3 AND rm.idImpact = 5) 
+                                OR (rm.idProbabilit = 5 AND rm.idImpact = 3) THEN 1 ELSE NULL END) AS Critical,
+                    COUNT(CASE WHEN (rm.idProbabilit = 4 AND rm.idImpact IN (3, 4)) 
+                                OR (rm.idProbabilit = 3 AND rm.idImpact IN (3, 4)) 
+                                OR (rm.idProbabilit = 5 AND rm.idImpact = 2) THEN 1 ELSE NULL END) AS Severe,
+                    COUNT(CASE WHEN (rm.idProbabilit = 5 AND rm.idImpact = 1) 
+                                OR (rm.idProbabilit = 4 AND rm.idImpact = 2) 
+                                OR (rm.idProbabilit = 3 AND rm.idImpact = 2) 
+                                OR (rm.idProbabilit = 2 AND rm.idImpact = 5) 
+                                OR (rm.idProbabilit = 1 AND rm.idImpact = 4) THEN 1 ELSE NULL END) AS Moderate,
+                    COUNT(CASE WHEN (rm.idProbabilit = 1 AND rm.idImpact IN (1, 2)) 
+                                OR (rm.idProbabilit = 2 AND rm.idImpact IN (1, 2)) 
+                                OR (rm.idProbabilit = 3 AND rm.idImpact = 1) 
+                                OR (rm.idProbabilit = 4 AND rm.idImpact = 1) THEN 1 ELSE NULL END) AS Sustainable
+                FROM 
+                    RenaultRisk.RiskMonitoring rm
+                GROUP BY 
+                    rm.idJalon;
+            """,
+            "riscos_por_classificacao": """
+                SELECT 
+                    COUNT(CASE WHEN (rm.idProbabilit = 5 AND rm.idImpact IN (4, 5)) 
+                                OR (rm.idProbabilit = 4 AND rm.idImpact = 5) 
+                                OR (rm.idProbabilit = 3 AND rm.idImpact = 5) 
+                                OR (rm.idProbabilit = 5 AND rm.idImpact = 3) THEN 1 ELSE NULL END) AS Critical,
+                    COUNT(CASE WHEN (rm.idProbabilit = 4 AND rm.idImpact IN (3, 4)) 
+                                OR (rm.idProbabilit = 3 AND rm.idImpact IN (3, 4)) 
+                                OR (rm.idProbabilit = 5 AND rm.idImpact = 2) THEN 1 ELSE NULL END) AS Severe,
+                    COUNT(CASE WHEN (rm.idProbabilit = 5 AND rm.idImpact = 1) 
+                                OR (rm.idProbabilit = 4 AND rm.idImpact = 2) 
+                                OR (rm.idProbabilit = 3 AND rm.idImpact = 2) 
+                                OR (rm.idProbabilit = 2 AND rm.idImpact = 5) 
+                                OR (rm.idProbabilit = 1 AND rm.idImpact = 4) THEN 1 ELSE NULL END) AS Moderate,
+                    COUNT(CASE WHEN (rm.idProbabilit = 1 AND rm.idImpact IN (1, 2)) 
+                                OR (rm.idProbabilit = 2 AND rm.idImpact IN (1, 2)) 
+                                OR (rm.idProbabilit = 3 AND rm.idImpact = 1) 
+                                OR (rm.idProbabilit = 4 AND rm.idImpact = 1) THEN 1 ELSE NULL END) AS Sustainable
+                FROM 
+                    RenaultRisk.RiskMonitoring rm;
+            """,
+            "porcentagem_criticos": """
+                SELECT
+                    SUM(CASE WHEN (rm.idProbabilit = 5 AND rm.idImpact IN (4, 5)) 
+                            OR (rm.idProbabilit = 4 AND rm.idImpact = 5) 
+                            OR (rm.idProbabilit = 3 AND rm.idImpact = 5) 
+                            OR (rm.idProbabilit = 5 AND rm.idImpact = 3) THEN 1 ELSE 0 END) / COUNT(*) * 100 AS Critical_Percentage,
+                    SUM(CASE WHEN NOT ((rm.idProbabilit = 5 AND rm.idImpact IN (4, 5)) 
+                                        OR (rm.idProbabilit = 4 AND rm.idImpact = 5) 
+                                        OR (rm.idProbabilit = 3 AND rm.idImpact = 5) 
+                                        OR (rm.idProbabilit = 5 AND rm.idImpact = 3)) THEN 1 ELSE 0 END) / COUNT(*) * 100 AS Other_Classifications_Percentage
+                FROM 
+                    RenaultRisk.RiskMonitoring rm;
+            """,
+            "riscos_criticos_abertos": """
+                SELECT 
+                    rm.idRisk,
+                    rm.alertDate,
+                    rm.idJalon
+                FROM 
+                    RenaultRisk.RiskMonitoring rm
+                WHERE 
+                    rm.resolutionDate IS NULL AND
+                    (
+                        (rm.idProbabilit = 5 AND rm.idImpact IN (4, 5)) OR 
+                        (rm.idProbabilit = 4 AND rm.idImpact = 5) OR 
+                        (rm.idProbabilit = 3 AND rm.idImpact = 5) OR 
+                        (rm.idProbabilit = 5 AND rm.idImpact = 3)
+                    );
+            """,
+            "top_5_riscos_recorrentes": """
+                SELECT 
+                    rm.risk,
+                    COUNT(rm.idRisk) AS risk_count,
+                    CASE 
+                        WHEN (rm.idProbabilit = 5 AND rm.idImpact IN (4, 5)) 
+                        OR (rm.idProbabilit = 4 AND rm.idImpact = 5) 
+                        OR (rm.idProbabilit = 3 AND rm.idImpact = 5) 
+                        OR (rm.idProbabilit = 5 AND rm.idImpact = 3) THEN 'Critical'
+                        WHEN (rm.idProbabilit = 4 AND rm.idImpact IN (3, 4)) 
+                        OR (rm.idProbabilit = 3 AND rm.idImpact IN (3, 4)) 
+                        OR (rm.idProbabilit = 5 AND rm.idImpact = 2) THEN 'Severe'
+                        WHEN (rm.idProbabilit = 5 AND rm.idImpact = 1) 
+                        OR (rm.idProbabilit = 4 AND rm.idImpact = 2) 
+                        OR (rm.idProbabilit = 3 AND rm.idImpact = 2) 
+                        OR (rm.idProbabilit = 2 AND rm.idImpact = 5) 
+                        OR (rm.idProbabilit = 1 AND rm.idImpact = 4) THEN 'Moderate'
+                        WHEN (rm.idProbabilit = 1 AND rm.idImpact IN (1, 2)) 
+                        OR (rm.idProbabilit = 2 AND rm.idImpact IN (1, 2)) 
+                        OR (rm.idProbabilit = 3 AND rm.idImpact = 1) 
+                        OR (rm.idProbabilit = 4 AND rm.idImpact = 1) THEN 'Sustainable'
+                    END AS classification
+                FROM 
+                    RenaultRisk.RiskMonitoring rm
+                WHERE 
+                    rm.resolutionDate IS NULL
+                GROUP BY 
+                    rm.risk, classification
+                ORDER BY 
+                    risk_count DESC
+                LIMIT 10;
+            """
+        }
+
+        result = {}
+        for key, query in queries.items():
+            response = mysql.get(query, ())
+            result[key] = response["data"]
+
+        return result
+    except Exception as error:
+        handle.error(f"Falhou ao buscar dados do dashboard: {error}")
         raise

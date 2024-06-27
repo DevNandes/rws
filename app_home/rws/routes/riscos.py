@@ -282,3 +282,39 @@ def busca_risk_monitoring():
             "mensagem": "Erro ao buscar dados do Risk Monitoring, tente novamente mais tarde.",
             "code": 500
         }), 500
+
+@riscos_routes.route("/dashboard", methods=['GET'])
+@jwt_required()
+def busca_dados_dashboard():
+    """
+    Busca dados para todos os dashboards
+    ---
+    responses:
+      200:
+        description: Dados do dashboard encontrados com sucesso
+        examples:
+          application/json: {
+              "dados_dashboard": {
+                  "situacoes_riscos": [{...}],
+                  "riscos_por_projeto": [{...}],
+                  "jalon_por_classificacao": [{...}],
+                  "riscos_por_classificacao": [{...}],
+                  "porcentagem_criticos": [{...}],
+                  "riscos_criticos_abertos": [{...}],
+                  "top_5_riscos_recorrentes": [{...}]
+              },
+              "code": 200
+          }
+    """
+    try:
+        result = riscos_dbc.busca_dados_dashboard()
+        return jsonify({
+            "dados_dashboard": result,
+            "code": 200
+        }), 200
+    except Exception as e:
+        handle.error(f"Erro ao buscar dados do dashboard: {e}")
+        return jsonify({
+            "mensagem": "Erro ao buscar dados do dashboard, tente novamente mais tarde.",
+            "code": 500
+        }), 500
