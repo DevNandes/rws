@@ -254,3 +254,31 @@ def salvar_risco():
             "mensagem": "Erro ao salvar o risco, tente novamente mais tarde.",
             "code": 500
         }), 500
+
+@riscos_routes.route("/relatorio", methods=['GET'])
+@jwt_required()
+def busca_risk_monitoring():
+    """
+    Busca dados dos riscos salvos
+    ---
+    responses:
+      200:
+        description: Dados dos riscos salvos obtidos com sucesso
+        examples:
+          application/json: {
+              "linhas": [{...}]
+              "code": 200
+          }
+    """
+    try:
+        result = riscos_dbc.busca_risk_monitoring()
+        return jsonify({
+            "tabela": result,
+            "code": 200
+        }), 200
+    except Exception as e:
+        handle.error(f"Erro ao buscar dados do Risk Monitoring: {e}")
+        return jsonify({
+            "mensagem": "Erro ao buscar dados do Risk Monitoring, tente novamente mais tarde.",
+            "code": 500
+        }), 500

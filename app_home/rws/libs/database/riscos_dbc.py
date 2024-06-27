@@ -130,3 +130,63 @@ def salvar_risco(data):
     except Exception as error:
         handle.error(f"Falhou ao salvar o risco: {error}")
         raise
+
+def busca_risk_monitoring():
+    """
+    Busca dados dos riscos salvos
+    """
+
+    try:
+        sql = ("""SELECT 
+        idRisk,
+        risk,
+        CadTipoRisco.nomeTipoRisco,
+        CadArea.nomeArea,
+        riskEntryDate,
+        consequences,
+        project,
+        CadMetier.nomeMetier,
+        CadJalon.nomeJalon,
+        CadProbabilit.nomeProbabilit,
+        CadImpact.nomeImpact,
+        CadStrategy.nomeStrategy,
+        action,
+        pilotName,
+        pilotId,
+        initialDate,
+        alertDate,
+        CadResidualProb.nomeResidualProb,
+        CadResidualImp.nomeResidualImp,
+        CadAction.nomeAction,
+        resolutionDate,
+        CadRiskValidation.nomeRiskValidation,
+        idCapitalization
+    FROM RenaultRisk.RiskMonitoring
+    INNER JOIN RenaultRisk.CadTipoRisco
+        ON RiskMonitoring.idTipoRisco = CadTipoRisco.idTipoRisco
+    INNER JOIN RenaultRisk.CadArea
+        ON RiskMonitoring.idArea = CadArea.idArea
+    INNER JOIN RenaultRisk.CadMetier
+        ON RiskMonitoring.idMetier = CadMetier.idMetier
+    INNER JOIN RenaultRisk.CadJalon
+        ON RiskMonitoring.idJalon = CadJalon.idJalon
+    INNER JOIN RenaultRisk.CadProbabilit
+        ON RiskMonitoring.idProbabilit = CadProbabilit.idProbabilit
+    INNER JOIN RenaultRisk.CadImpact
+        ON RiskMonitoring.idImpact = CadImpact.idImpact
+    INNER JOIN RenaultRisk.CadStrategy
+        ON RiskMonitoring.idStrategy = CadStrategy.idStrategy
+    INNER JOIN RenaultRisk.CadResidualProb
+        ON RiskMonitoring.idResidualProb = CadResidualProb.idResidualProb
+    INNER JOIN RenaultRisk.CadResidualImp
+        ON RiskMonitoring.idResidualImp = CadResidualImp.idResidualImp
+    INNER JOIN RenaultRisk.CadAction
+        ON RiskMonitoring.idAction = CadAction.idAction
+    INNER JOIN RenaultRisk.CadRiskValidation
+        ON RiskMonitoring.idRiskValidation = CadRiskValidation.idRiskValidation;""")
+        sql_parameters = ()
+        response = mysql.get(sql, sql_parameters)
+        return response["data"]
+    except Exception as error:
+        handle.error(f"Falhou ao buscar os riscos: {error}")
+        raise
