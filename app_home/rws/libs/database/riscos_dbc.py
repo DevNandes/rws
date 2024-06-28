@@ -172,9 +172,6 @@ def busca_risk_monitoring():
         handle.error(f"Falhou ao buscar os riscos: {error}")
         raise
 
-from libs.database import mysql
-from libs.tools import handle
-
 def busca_dados_dashboard():
     """
     Busca dados para todos os dashboards necessários
@@ -196,7 +193,7 @@ def busca_dados_dashboard():
             """,
             "jalon_por_classificacao": """
                 SELECT 
-                    rm.idJalon,
+                    cj.nomeJalon,
                     COUNT(CASE WHEN (rm.idProbabilit = 5 AND rm.idImpact IN (4, 5)) 
                                 OR (rm.idProbabilit = 4 AND rm.idImpact = 5) 
                                 OR (rm.idProbabilit = 3 AND rm.idImpact = 5) 
@@ -215,6 +212,8 @@ def busca_dados_dashboard():
                                 OR (rm.idProbabilit = 4 AND rm.idImpact = 1) THEN 1 ELSE NULL END) AS Sustainable
                 FROM 
                     RenaultRisk.RiskMonitoring rm
+                INNER JOIN RenaultRisk.CadJalon cj
+                    ON cj.idJalon = rm.idJalon
                 GROUP BY 
                     rm.idJalon;
             """,
@@ -271,34 +270,16 @@ def busca_dados_dashboard():
             "top_5_riscos_recorrentes": """
                 SELECT 
                     rm.risk,
-                    COUNT(rm.idRisk) AS risk_count,
-                    CASE 
-                        WHEN (rm.idProbabilit = 5 AND rm.idImpact IN (4, 5)) 
-                        OR (rm.idProbabilit = 4 AND rm.idImpact = 5) 
-                        OR (rm.idProbabilit = 3 AND rm.idImpact = 5) 
-                        OR (rm.idProbabilit = 5 AND rm.idImpact = 3) THEN 'Critical'
-                        WHEN (rm.idProbabilit = 4 AND rm.idImpact IN (3, 4)) 
-                        OR (rm.idProbabilit = 3 AND rm.idImpact IN (3, 4)) 
-                        OR (rm.idProbabilit = 5 AND rm.idImpact = 2) THEN 'Severe'
-                        WHEN (rm.idProbabilit = 5 AND rm.idImpact = 1) 
-                        OR (rm.idProbabilit = 4 AND rm.idImpact = 2) 
-                        OR (rm.idProbabilit = 3 AND rm.idImpact = 2) 
-                        OR (rm.idProbabilit = 2 AND rm.idImpact = 5) 
-                        OR (rm.idProbabilit = 1 AND rm.idImpact = 4) THEN 'Moderate'
-                        WHEN (rm.idProbabilit = 1 AND rm.idImpact IN (1, 2)) 
-                        OR (rm.idProbabilit = 2 AND rm.idImpact IN (1, 2)) 
-                        OR (rm.idProbabilit = 3 AND rm.idImpact = 1) 
-                        OR (rm.idProbabilit = 4 AND rm.idImpact = 1) THEN 'Sustainable'
-                    END AS classification
+                    COUNT(rm.idRisk) AS risk_count
                 FROM 
                     RenaultRisk.RiskMonitoring rm
                 WHERE 
                     rm.resolutionDate IS NULL
                 GROUP BY 
-                    rm.risk, classification
+                    rm.risk
                 ORDER BY 
                     risk_count DESC
-                LIMIT 10;
+                LIMIT 5;
             """
         }
 
